@@ -2,14 +2,14 @@ const groups = ["Carnes rojas", "Pollo y merluza", "Vegetales y opciones mixtas"
 
 const dishes = [
   [0, "Bondiola desgrasada braseada a la barbacoa", "Cocción lenta, con puré de boniato, batata o papa a elección.", 480, 38, 44, 16],
-  [0, "Carne roja magra braseada al vino", "Al vino tinto o blanco, con verduras grilladas.", 375, 44, 16, 14],
-  [0, "Pastel de papas casero", "Carne magra desgrasada y puré cremoso, con o sin aceitunas y huevo.", 465, 37, 45, 14],
+  [0, "Carne roja magra braseada al vino", "Al vino tinto o blanco, con puré o papas al horno a elección.", 375, 44, 16, 14],
+  [0, "Pastel de papas casero", "Carne magra desgrasada y puré cremoso. Aceitunas y huevo opcionales.", 465, 37, 45, 14],
   [1, "Pollo dorado al horno", "Cuarto trasero o pechuga sin piel, con papas picantes o clásicas.", 445, 41, 42, 11],
-  [1, "Pollo con verduras asadas", "Pechuga grillada o milanesa con panko al horno, con ratatouille.", 420, 42, 28, 14],
+  [1, "Pollo con guarnición a elección", "En milanesa o con panko y semillas. Elegí verduras asadas tipo ratatouille o puré.", 420, 42, 28, 14],
   [1, "Tarta de pollo al puerro", "Porción individual con masa fina y pechuga, con queso Port Salut opcional.", 445, 34, 38, 17],
   [1, "Filet de merluza", "Empanizado al horno o escalope, con puré o papa al horno.", 450, 34, 46, 13],
   [2, "Lasagna de zucchinis o berenjenas", "Capas grilladas con tomate y queso Port Salut opcional. Con carne picada magra desgrasada o vegetariana.", 415, 40, 22, 17, "Los macros corresponden a la versión de referencia de la carta."],
-  [2, "Dumplings artesanales", "Rellenos de carne magra, pollo o vegetales, al verdeo o a la barbacoa.", 425, 31, 48, 11, "Los macros pueden variar según el relleno."],
+  [2, "Dumplings artesanales", "Rellenos de carne magra o pollo, al verdeo o a la barbacoa.", 425, 31, 48, 11, "Los macros pueden variar según el relleno."],
   [2, "Sopa crema de calabaza", "Con cebollas caramelizadas y cubos de pollo crocantes al panko opcionales.", 410, 30, 46, 10, "Macros con pollo. Sin pollo: 240 kcal y 5 g de proteína."],
   [2, "Sopa crema de papa y espinacas", "Podés agregar queso Port Salut fundido y cubos de pollo crocantes al panko.", 455, 38, 44, 12, "Macros con pollo. Sin pollo: 285 kcal y 13 g de proteína."],
   [2, "Berenjenas caramelizadas a la napolitana", "Con salsa de tomate natural y puré. Queso Port Salut opcional.", 395, 18, 48, 13],
@@ -83,12 +83,20 @@ orderForm.querySelector("#delivery-price").textContent = formatPrice(cabaDeliver
 
 const sidesByDish = new Map([
   ["Bondiola desgrasada braseada a la barbacoa", ["Puré de boniato", "Puré de batata", "Puré de papa"]],
+  ["Carne roja magra braseada al vino", ["Puré", "Papas al horno"]],
   ["Pollo dorado al horno", ["Papas picantes", "Papas clásicas"]],
+  ["Pollo con guarnición a elección", ["Verduras asadas tipo ratatouille", "Puré"]],
   ["Filet de merluza", ["Puré", "Papa al horno"]],
   ["Salmón a la plancha sin piel", ["Puré", "Papas", "Verduras asadas de temporada"]]
 ]);
 
+const variantsByDish = new Map([
+  ["Pollo con guarnición a elección", ["Preparación", ["Milanesa", "Panko y semillas"]]],
+  ["Dumplings artesanales", ["Relleno", ["Carne", "Pollo"]]]
+]);
+
 const extrasByDish = new Map([
+  ["Pastel de papas casero", ["aceitunas", "huevo"]],
   ["Tarta de pollo al puerro", ["queso Port Salut"]],
   ["Lasagna de zucchinis o berenjenas", ["queso Port Salut"]],
   ["Sopa crema de calabaza", ["pollo al panko"]],
@@ -111,33 +119,38 @@ const dishOptions = dishes.map(([category, name], index) => {
   orderDishes.append(container);
 
   const sides = sidesByDish.get(name);
+  const variant = variantsByDish.get(name);
+  const choices = [];
+  if (variant) choices.push(variant);
+  if (sides) choices.push(["Acompañamiento", sides]);
   const extras = extrasByDish.get(name) ?? [];
-  const sideName = `side-${index}`;
   const options = document.createElement("fieldset");
   options.className = "order-options";
   const optionsLegend = document.createElement("legend");
   optionsLegend.textContent = "Personalizá tu plato";
   optionsLegend.setAttribute("aria-label", `Opciones para ${name}`);
   options.append(optionsLegend);
-  if (sides) {
-    const sideFieldset = document.createElement("fieldset");
-    sideFieldset.className = "order-sides";
+  const choiceGroups = choices.map(([title, values], groupIndex) => {
+    const fieldset = document.createElement("fieldset");
+    fieldset.className = "order-sides";
+    const fieldName = `choice-${index}-${groupIndex}`;
     const legend = document.createElement("legend");
-    legend.textContent = "Elegí un acompañamiento";
-    legend.setAttribute("aria-label", `Acompañamiento para ${name}`);
-    sideFieldset.append(legend);
-    for (const side of sides) {
-      const sideLabel = document.createElement("label");
+    legend.textContent = title;
+    legend.setAttribute("aria-label", `${title} para ${name}`);
+    fieldset.append(legend);
+    for (const value of values) {
+      const choiceLabel = document.createElement("label");
       const radio = document.createElement("input");
       radio.type = "radio";
-      radio.name = sideName;
-      radio.value = side;
+      radio.name = fieldName;
+      radio.value = value;
       radio.required = true;
-      sideLabel.append(radio, document.createTextNode(side));
-      sideFieldset.append(sideLabel);
+      choiceLabel.append(radio, document.createTextNode(value));
+      fieldset.append(choiceLabel);
     }
-    options.append(sideFieldset);
-  }
+    options.append(fieldset);
+    return {title, fieldName};
+  });
 
   const extraInputs = extras.map(extra => {
     const extraLabel = document.createElement("label");
@@ -149,8 +162,8 @@ const dishOptions = dishes.map(([category, name], index) => {
     options.append(extraLabel);
     return extraInput;
   });
-  if (sides || extras.length) container.append(options);
-  return {input, hasSurcharge, options, sides, sideName, extraInputs};
+  if (choices.length || extras.length) container.append(options);
+  return {input, hasSurcharge, options, choiceGroups, extraInputs};
 });
 
 function selectedDishes() {
@@ -197,10 +210,12 @@ orderForm.addEventListener("submit", event => {
     "",
     `Combo de ${combo} porciones`,
     "Platos elegidos:",
-    ...selection.map(({input, sides, sideName, extraInputs}) => {
-      const side = sides ? orderForm.elements[sideName].value : "";
+    ...selection.map(({input, choiceGroups, extraInputs}) => {
+      const choices = choiceGroups.map(({title, fieldName}) =>
+        ` · ${title.toLowerCase()}: ${orderForm.elements[fieldName].value}`
+      ).join("");
       const extras = extraInputs.map(extra => ` · ${extra.checked ? "con" : "sin"} ${extra.value}`).join("");
-      return `• ${input.value}${side ? ` (acompañamiento: ${side})` : ""}${extras}`;
+      return `• ${input.value}${choices}${extras}`;
     }),
     "",
     shipping ? `Entrega: envío a CABA (${formatPrice(shipping)})` : "Entrega: retiro",

@@ -53,3 +53,85 @@ const buttons = ["Todos", ...groups].map((label, i) => {
 filters.append(...buttons);
 filters.hidden = false;
 renderMenu(-1);
+
+const orderForm = document.querySelector("#order-form");
+const orderDishes = orderForm.querySelector(".order-dishes");
+const dishCount = orderForm.querySelector("#dish-count");
+const dishError = orderForm.querySelector("#dish-error");
+const totalLabel = orderForm.querySelector("#total-label");
+const orderAmount = orderForm.querySelector("#order-amount");
+const salmonNote = orderForm.querySelector("#salmon-note");
+const comboPrices = {20: 200000, 40: 400000};
+const maxDishes = 10;
+const whatsappNumber = "5491163301998";
+const currency = new Intl.NumberFormat("es-AR", {
+  style: "currency",
+  currency: "ARS",
+  maximumFractionDigits: 0
+});
+
+function formatPrice(amount) {
+  return currency.format(amount);
+}
+
+orderForm.querySelectorAll('input[name="combo"]').forEach(option => {
+  option.labels[0].querySelector(".order-price").textContent = formatPrice(comboPrices[option.value]);
+});
+
+const dishOptions = dishes.map(([category, name]) => {
+  const label = document.createElement("label");
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.name = "dish";
+  input.value = name;
+  if (category === 3) input.dataset.surcharge = "true";
+  label.append(input, document.createTextNode(name + (input.dataset.surcharge ? " (con adicional)" : "")));
+  orderDishes.append(label);
+  return input;
+});
+
+function selectedDishes() {
+  return dishOptions.filter(option => option.checked);
+}
+
+function updateOrder() {
+  const selection = selectedDishes();
+  const combo = orderForm.elements.combo.value;
+  const hasSalmon = selection.some(option => option.dataset.surcharge);
+  const atLimit = selection.length >= maxDishes;
+  dishOptions.forEach(option => { option.disabled = atLimit && !option.checked; });
+  dishCount.textContent = `${selection.length} de ${maxDishes} platos elegidos${atLimit ? " · Límite alcanzado" : ""}`;
+  if (selection.length) dishError.hidden = true;
+  totalLabel.textContent = hasSalmon ? "Importe base" : "Monto final";
+  orderAmount.textContent = combo ? formatPrice(comboPrices[combo]) : "Elegí un combo";
+  salmonNote.hidden = !hasSalmon;
+}
+
+orderForm.addEventListener("change", updateOrder);
+orderForm.addEventListener("submit", event => {
+  event.preventDefault();
+  const selection = selectedDishes();
+  if (!selection.length) {
+    dishError.hidden = false;
+    dishOptions[0].focus();
+    return;
+  }
+  const combo = orderForm.elements.combo.value;
+  const price = formatPrice(comboPrices[combo]);
+  const hasSalmon = selection.some(option => option.dataset.surcharge);
+  const message = [
+    "¡Hola, BalanceBox! Quiero hacer un pedido.",
+    "",
+    `Combo de ${combo} porciones`,
+    "Platos elegidos:",
+    ...selection.map(option => `• ${option.value}`),
+    "",
+    hasSalmon
+      ? `Importe base: ${price}. ¿Me confirmás el adicional de salmón y el monto final?`
+      : `Monto final: ${price}.`
+  ].join("\n");
+  window.location.assign(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`);
+});
+
+orderForm.hidden = false;
+updateOrder();

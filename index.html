@@ -12,7 +12,7 @@
 <a class="skip" href="#carta">Ir a la carta</a>
 <header class="bar">
 <a class="brand" href="#">BALANCEBOX<span>✦</span></a>
-<nav aria-label="Principal"><a href="#carta">Carta</a><a href="#combos">Combos</a></nav>
+<nav aria-label="Principal"><a href="#carta">Carta</a><a href="#combos">Combos</a><a href="#pedido">Pedí tu box</a></nav>
 </header>
 <main>
 <section class="hero" aria-labelledby="hero-title">
@@ -47,8 +47,33 @@
 <div class="section">
 <div class="section-head"><div><p class="eyebrow">Listos para tu freezer</p><h2>ARMÁ TU BOX</h2></div><p>Dos combos a elección para organizar tus almuerzos y cenas.</p></div>
 <div class="combo-grid">
-<article><h3>20 porciones</h3><p class="price">$200.000</p><p>Elegís 10 variedades de la carta, con 2 unidades por plato.</p></article>
+<article><h3>20 porciones</h3><p class="price">$200.000</p><p>Elegís hasta 10 variedades de la carta.</p></article>
 <article><h3>40 porciones</h3><p class="price">$400.000</p><p>Elegís hasta 10 variedades por entrega quincenal.</p></article>
+</div>
+<div class="order" id="pedido">
+<h3>Hacé tu pedido</h3>
+<noscript><p>Activá JavaScript para armar tu pedido y enviarlo por WhatsApp.</p></noscript>
+<form id="order-form" hidden>
+<fieldset>
+<legend>1. Elegí tu combo</legend>
+<div class="order-combos">
+<label><input type="radio" name="combo" value="20" required> 20 porciones <span class="order-price"></span></label>
+<label><input type="radio" name="combo" value="40"> 40 porciones <span class="order-price"></span></label>
+</div>
+</fieldset>
+<fieldset>
+<legend>2. Elegí hasta 10 platos distintos</legend>
+<p id="dish-count" role="status">0 de 10 platos elegidos</p>
+<p id="dish-error" role="alert" hidden>Elegí al menos un plato para continuar.</p>
+<div class="order-dishes"></div>
+</fieldset>
+<div class="order-total" role="status">
+<p><strong id="total-label">Importe del pedido</strong> <span id="order-amount">Elegí un combo</span></p>
+<p id="salmon-note" hidden>El adicional de salmón y el total final se confirman por WhatsApp.</p>
+</div>
+<button class="button" type="submit">Continuar a WhatsApp <span aria-hidden="true">↗</span></button>
+<p class="order-help">Revisá el pedido en WhatsApp y tocá Enviar.</p>
+</form>
 </div>
 </div>
 </section>

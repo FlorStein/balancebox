@@ -88,7 +88,16 @@ const sidesByDish = new Map([
   ["Salmón a la plancha sin piel", ["Puré", "Papas", "Verduras asadas de temporada"]]
 ]);
 
-const dishOptions = dishes.map(([category, name, description], index) => {
+const extrasByDish = new Map([
+  ["Tarta de pollo al puerro", ["queso Port Salut"]],
+  ["Lasagna de zucchinis o berenjenas", ["queso Port Salut"]],
+  ["Sopa crema de calabaza", ["pollo al panko"]],
+  ["Sopa crema de papa y espinacas", ["queso Port Salut", "pollo al panko"]],
+  ["Berenjenas caramelizadas a la napolitana", ["queso Port Salut"]],
+  ["Quiche Lorraine", ["queso Port Salut", "panceta"]]
+]);
+
+const dishOptions = dishes.map(([category, name], index) => {
   const container = document.createElement("div");
   container.className = "order-dish";
   const label = document.createElement("label");
@@ -102,10 +111,16 @@ const dishOptions = dishes.map(([category, name, description], index) => {
   orderDishes.append(container);
 
   const sides = sidesByDish.get(name);
+  const extras = extrasByDish.get(name) ?? [];
   const sideName = `side-${index}`;
-  let sideFieldset;
+  const options = document.createElement("fieldset");
+  options.className = "order-options";
+  const optionsLegend = document.createElement("legend");
+  optionsLegend.textContent = "Personalizá tu plato";
+  optionsLegend.setAttribute("aria-label", `Opciones para ${name}`);
+  options.append(optionsLegend);
   if (sides) {
-    sideFieldset = document.createElement("fieldset");
+    const sideFieldset = document.createElement("fieldset");
     sideFieldset.className = "order-sides";
     const legend = document.createElement("legend");
     legend.textContent = "Elegí un acompañamiento";
@@ -121,20 +136,21 @@ const dishOptions = dishes.map(([category, name, description], index) => {
       sideLabel.append(radio, document.createTextNode(side));
       sideFieldset.append(sideLabel);
     }
-    container.append(sideFieldset);
+    options.append(sideFieldset);
   }
 
-  let cheeseInput;
-  if (description.toLowerCase().includes("queso port salut")) {
-    const cheeseLabel = document.createElement("label");
-    cheeseLabel.className = "order-cheese";
-    cheeseInput = document.createElement("input");
-    cheeseInput.type = "checkbox";
-    cheeseInput.setAttribute("aria-label", `Agregar queso Port Salut a ${name}`);
-    cheeseLabel.append(cheeseInput, document.createTextNode("Agregar queso Port Salut"));
-    container.append(cheeseLabel);
-  }
-  return {input, hasSurcharge, sideFieldset, sideName, cheeseInput};
+  const extraInputs = extras.map(extra => {
+    const extraLabel = document.createElement("label");
+    const extraInput = document.createElement("input");
+    extraInput.type = "checkbox";
+    extraInput.value = extra;
+    extraInput.setAttribute("aria-label", `Agregar ${extra} a ${name}`);
+    extraLabel.append(extraInput, document.createTextNode(`Con ${extra}`));
+    options.append(extraLabel);
+    return extraInput;
+  });
+  if (sides || extras.length) container.append(options);
+  return {input, hasSurcharge, options, sides, sideName, extraInputs};
 });
 
 function selectedDishes() {
@@ -150,16 +166,9 @@ function updateOrder() {
   const combo = orderForm.elements.combo.value;
   const hasSalmon = selection.some(option => option.hasSurcharge);
   const atLimit = selection.length >= maxDishes;
-  dishOptions.forEach(({input, sideFieldset, cheeseInput}) => {
+  dishOptions.forEach(({input, options}) => {
     input.disabled = atLimit && !input.checked;
-    if (sideFieldset) {
-      sideFieldset.hidden = !input.checked;
-      sideFieldset.disabled = !input.checked;
-    }
-    if (cheeseInput) {
-      cheeseInput.parentElement.hidden = !input.checked;
-      cheeseInput.disabled = !input.checked;
-    }
+    options.disabled = !input.checked;
   });
   dishCount.textContent = `${selection.length} de ${maxDishes} platos elegidos${atLimit ? " · Límite alcanzado" : ""}`;
   if (selection.length) dishError.hidden = true;
@@ -188,10 +197,10 @@ orderForm.addEventListener("submit", event => {
     "",
     `Combo de ${combo} porciones`,
     "Platos elegidos:",
-    ...selection.map(({input, sideFieldset, sideName, cheeseInput}) => {
-      const side = sideFieldset ? orderForm.elements[sideName].value : "";
-      const cheese = cheeseInput ? ` · ${cheeseInput.checked ? "con" : "sin"} queso Port Salut` : "";
-      return `• ${input.value}${side ? ` (acompañamiento: ${side})` : ""}${cheese}`;
+    ...selection.map(({input, sides, sideName, extraInputs}) => {
+      const side = sides ? orderForm.elements[sideName].value : "";
+      const extras = extraInputs.map(extra => ` · ${extra.checked ? "con" : "sin"} ${extra.value}`).join("");
+      return `• ${input.value}${side ? ` (acompañamiento: ${side})` : ""}${extras}`;
     }),
     "",
     shipping ? `Entrega: envío a CABA (${formatPrice(shipping)})` : "Entrega: retiro",

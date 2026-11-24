@@ -30,7 +30,7 @@
 <path d="M124 94c14-11 21-17 35-17 12 1 18 12 6 22-9 7-23 5-27-5m-16-1 43-18m-21 3 7 17M44 65l-9-14m-5 32-16-5m276 39 10-20m10 33 19-10M357 229l22 7m-24 9 14 13M58 306l17-4m-5 21 13-12M316 63c0 14 5 19 18 20-13 2-18 7-18 21-1-14-6-19-19-21 13-1 18-6 19-20zM45 110c0 8 3 11 10 12-7 1-10 4-10 12-1-8-4-11-11-12 7-1 10-4 11-12z"/>
 <path d="M115 338c55 8 145 8 193-8m-209 3-16-2m243-5 15-4"/>
 </svg>
-<p>Del freezer a tu mesa</p>
+<p>Recién hechas, listas para congelar</p>
 </div>
 </div>
 </section>
@@ -52,6 +52,11 @@
 </div>
 <div class="order" id="pedido">
 <h3>Hacé tu pedido</h3>
+<ul class="order-terms">
+<li><strong>Pago por adelantado.</strong></li>
+<li><strong>Retiro:</strong> tu pedido estará listo en aproximadamente 3 días, según la demanda.</li>
+<li><strong>Boxes frescas:</strong> las recibís recién hechas, sin congelar y listas para guardar en el freezer.</li>
+</ul>
 <noscript><p>Activá JavaScript para armar tu pedido y enviarlo por WhatsApp.</p></noscript>
 <form id="order-form" hidden>
 <fieldset>
@@ -67,8 +72,16 @@
 <p id="dish-error" role="alert" hidden>Elegí al menos un plato para continuar.</p>
 <div class="order-dishes"></div>
 </fieldset>
+<fieldset>
+<legend>3. Elegí cómo recibir tu pedido</legend>
+<div class="order-combos">
+<label><input type="radio" name="delivery" value="pickup" checked> Retiro</label>
+<label><input type="radio" name="delivery" value="caba"> Envío a CABA <span class="order-price" id="delivery-price"></span></label>
+</div>
+</fieldset>
 <div class="order-total" role="status">
 <p><strong id="total-label">Importe del pedido</strong> <span id="order-amount">Elegí un combo</span></p>
+<p id="delivery-note" hidden>Incluye el envío a CABA.</p>
 <p id="salmon-note" hidden>El adicional de salmón y el total final se confirman por WhatsApp.</p>
 </div>
 <button class="button" type="submit">Continuar a WhatsApp <span aria-hidden="true">↗</span></button>

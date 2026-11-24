@@ -64,6 +64,8 @@ h1{font-size:clamp(3rem,13vw,5.9rem)}
 
 .order{margin-top:2rem;border:1px solid #b8193060;border-radius:14px;background:#fff9ec;padding:clamp(1rem,4vw,2rem)}
 .order h3{font:900 clamp(1.5rem,4vw,2.3rem)/1 var(--display);letter-spacing:-.045em;color:var(--red);margin:0 0 1.4rem}
+.order-terms{margin:0 0 1.4rem;padding-left:1.15rem;color:var(--blue)}
+.order-terms li+li{margin-top:.25rem}
 .order fieldset{min-width:0;padding:0;border:0;margin:0 0 1.4rem}
 .order legend{font:700 1.15rem/1.3 var(--serif);color:var(--red);padding:0}
 .order-combos,.order-dishes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;margin-top:.6rem}
@@ -79,7 +81,7 @@ h1{font-size:clamp(3rem,13vw,5.9rem)}
 .order-total{border-top:1px solid #154b7c55;padding-top:.8rem;margin-bottom:1rem}
 .order-total p{margin:0}
 #order-amount{font:900 1.2rem/1 var(--display);color:var(--red);margin-inline-start:.35rem}
-#salmon-note{margin-top:.35rem}
+#delivery-note,#salmon-note{margin-top:.35rem}
 .order .button{cursor:pointer;font-size:1rem}
 @media(max-width:490px){
 .bar{flex-wrap:wrap}

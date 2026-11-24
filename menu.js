@@ -61,7 +61,9 @@ const dishError = orderForm.querySelector("#dish-error");
 const totalLabel = orderForm.querySelector("#total-label");
 const orderAmount = orderForm.querySelector("#order-amount");
 const salmonNote = orderForm.querySelector("#salmon-note");
+const deliveryNote = orderForm.querySelector("#delivery-note");
 const comboPrices = {20: 200000, 40: 400000};
+const cabaDeliveryPrice = 10000;
 const maxDishes = 10;
 const whatsappNumber = "5491163301998";
 const currency = new Intl.NumberFormat("es-AR", {
@@ -77,6 +79,7 @@ function formatPrice(amount) {
 orderForm.querySelectorAll('input[name="combo"]').forEach(option => {
   option.labels[0].querySelector(".order-price").textContent = formatPrice(comboPrices[option.value]);
 });
+orderForm.querySelector("#delivery-price").textContent = formatPrice(cabaDeliveryPrice);
 
 const dishOptions = dishes.map(([category, name]) => {
   const label = document.createElement("label");
@@ -94,6 +97,10 @@ function selectedDishes() {
   return dishOptions.filter(option => option.checked);
 }
 
+function deliveryCost() {
+  return orderForm.elements.delivery.value === "caba" ? cabaDeliveryPrice : 0;
+}
+
 function updateOrder() {
   const selection = selectedDishes();
   const combo = orderForm.elements.combo.value;
@@ -103,7 +110,9 @@ function updateOrder() {
   dishCount.textContent = `${selection.length} de ${maxDishes} platos elegidos${atLimit ? " · Límite alcanzado" : ""}`;
   if (selection.length) dishError.hidden = true;
   totalLabel.textContent = hasSalmon ? "Importe base" : "Monto final";
-  orderAmount.textContent = combo ? formatPrice(comboPrices[combo]) : "Elegí un combo";
+  const shipping = deliveryCost();
+  orderAmount.textContent = combo ? formatPrice(comboPrices[combo] + shipping) : "Elegí un combo";
+  deliveryNote.hidden = !combo || !shipping;
   salmonNote.hidden = !hasSalmon;
 }
 
@@ -117,7 +126,8 @@ orderForm.addEventListener("submit", event => {
     return;
   }
   const combo = orderForm.elements.combo.value;
-  const price = formatPrice(comboPrices[combo]);
+  const shipping = deliveryCost();
+  const price = formatPrice(comboPrices[combo] + shipping);
   const hasSalmon = selection.some(option => option.dataset.surcharge);
   const message = [
     "¡Hola, BalanceBox! Quiero hacer un pedido.",
@@ -126,6 +136,8 @@ orderForm.addEventListener("submit", event => {
     "Platos elegidos:",
     ...selection.map(option => `• ${option.value}`),
     "",
+    shipping ? `Entrega: envío a CABA (${formatPrice(shipping)})` : "Entrega: retiro",
+    "Pago por adelantado.",
     hasSalmon
       ? `Importe base: ${price}. ¿Me confirmás el adicional de salmón y el monto final?`
       : `Monto final: ${price}.`

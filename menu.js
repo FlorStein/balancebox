@@ -6,14 +6,14 @@ const dishes = [
   [0, "Pastel de papas casero", "Carne magra desgrasada y puré cremoso, con o sin aceitunas y huevo.", 465, 37, 45, 14],
   [1, "Pollo dorado al horno", "Cuarto trasero o pechuga sin piel, con papas picantes o clásicas.", 445, 41, 42, 11],
   [1, "Pollo con verduras asadas", "Pechuga grillada o milanesa con panko al horno, con ratatouille.", 420, 42, 28, 14],
-  [1, "Tarta de pollo al puerro", "Porción individual con masa fina, pechuga y queso Port Salut.", 445, 34, 38, 17],
+  [1, "Tarta de pollo al puerro", "Porción individual con masa fina y pechuga, con queso Port Salut opcional.", 445, 34, 38, 17],
   [1, "Filet de merluza", "Empanizado al horno o escalope, con puré o papa al horno.", 450, 34, 46, 13],
-  [2, "Lasagna de zucchinis o berenjenas", "Capas grilladas con tomate y queso Port Salut. Con carne picada magra desgrasada o vegetariana.", 415, 40, 22, 17, "Los macros corresponden a la versión de referencia de la carta."],
+  [2, "Lasagna de zucchinis o berenjenas", "Capas grilladas con tomate y queso Port Salut opcional. Con carne picada magra desgrasada o vegetariana.", 415, 40, 22, 17, "Los macros corresponden a la versión de referencia de la carta."],
   [2, "Dumplings artesanales", "Rellenos de carne magra, pollo o vegetales, al verdeo o a la barbacoa.", 425, 31, 48, 11, "Los macros pueden variar según el relleno."],
   [2, "Sopa crema de calabaza", "Con cebollas caramelizadas y cubos de pollo crocantes al panko opcionales.", 410, 30, 46, 10, "Macros con pollo. Sin pollo: 240 kcal y 5 g de proteína."],
-  [2, "Sopa crema de papa y espinacas", "Con queso Port Salut fundido y cubos de pollo crocantes al panko opcionales.", 455, 38, 44, 12, "Macros con pollo. Sin pollo: 285 kcal y 13 g de proteína."],
-  [2, "Berenjenas caramelizadas a la napolitana", "Con queso Port Salut, salsa de tomate natural y puré.", 395, 18, 48, 13],
-  [2, "Quiche Lorraine", "Porción individual clásica con queso Port Salut, con o sin panceta.", 450, 26, 34, 23, "Los macros pueden variar según la versión."],
+  [2, "Sopa crema de papa y espinacas", "Podés agregar queso Port Salut fundido y cubos de pollo crocantes al panko.", 455, 38, 44, 12, "Macros con pollo. Sin pollo: 285 kcal y 13 g de proteína."],
+  [2, "Berenjenas caramelizadas a la napolitana", "Con salsa de tomate natural y puré. Queso Port Salut opcional.", 395, 18, 48, 13],
+  [2, "Quiche Lorraine", "Porción individual clásica con queso Port Salut opcional, con o sin panceta.", 450, 26, 34, 23, "Los macros pueden variar según la versión."],
   [3, "Salmón a la plancha sin piel", "Con puré, papas o verduras asadas de temporada.", 520, 36, 30, 28, "Con costo adicional."]
 ];
 
@@ -81,20 +81,64 @@ orderForm.querySelectorAll('input[name="combo"]').forEach(option => {
 });
 orderForm.querySelector("#delivery-price").textContent = formatPrice(cabaDeliveryPrice);
 
-const dishOptions = dishes.map(([category, name]) => {
+const sidesByDish = new Map([
+  ["Bondiola desgrasada braseada a la barbacoa", ["Puré de boniato", "Puré de batata", "Puré de papa"]],
+  ["Pollo dorado al horno", ["Papas picantes", "Papas clásicas"]],
+  ["Filet de merluza", ["Puré", "Papa al horno"]],
+  ["Salmón a la plancha sin piel", ["Puré", "Papas", "Verduras asadas de temporada"]]
+]);
+
+const dishOptions = dishes.map(([category, name, description], index) => {
+  const container = document.createElement("div");
+  container.className = "order-dish";
   const label = document.createElement("label");
   const input = document.createElement("input");
   input.type = "checkbox";
   input.name = "dish";
   input.value = name;
-  if (category === 3) input.dataset.surcharge = "true";
-  label.append(input, document.createTextNode(name + (input.dataset.surcharge ? " (con adicional)" : "")));
-  orderDishes.append(label);
-  return input;
+  const hasSurcharge = category === 3;
+  label.append(input, document.createTextNode(name + (hasSurcharge ? " (con adicional)" : "")));
+  container.append(label);
+  orderDishes.append(container);
+
+  const sides = sidesByDish.get(name);
+  const sideName = `side-${index}`;
+  let sideFieldset;
+  if (sides) {
+    sideFieldset = document.createElement("fieldset");
+    sideFieldset.className = "order-sides";
+    const legend = document.createElement("legend");
+    legend.textContent = "Elegí un acompañamiento";
+    legend.setAttribute("aria-label", `Acompañamiento para ${name}`);
+    sideFieldset.append(legend);
+    for (const side of sides) {
+      const sideLabel = document.createElement("label");
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = sideName;
+      radio.value = side;
+      radio.required = true;
+      sideLabel.append(radio, document.createTextNode(side));
+      sideFieldset.append(sideLabel);
+    }
+    container.append(sideFieldset);
+  }
+
+  let cheeseInput;
+  if (description.toLowerCase().includes("queso port salut")) {
+    const cheeseLabel = document.createElement("label");
+    cheeseLabel.className = "order-cheese";
+    cheeseInput = document.createElement("input");
+    cheeseInput.type = "checkbox";
+    cheeseInput.setAttribute("aria-label", `Agregar queso Port Salut a ${name}`);
+    cheeseLabel.append(cheeseInput, document.createTextNode("Agregar queso Port Salut"));
+    container.append(cheeseLabel);
+  }
+  return {input, hasSurcharge, sideFieldset, sideName, cheeseInput};
 });
 
 function selectedDishes() {
-  return dishOptions.filter(option => option.checked);
+  return dishOptions.filter(({input}) => input.checked);
 }
 
 function deliveryCost() {
@@ -104,9 +148,19 @@ function deliveryCost() {
 function updateOrder() {
   const selection = selectedDishes();
   const combo = orderForm.elements.combo.value;
-  const hasSalmon = selection.some(option => option.dataset.surcharge);
+  const hasSalmon = selection.some(option => option.hasSurcharge);
   const atLimit = selection.length >= maxDishes;
-  dishOptions.forEach(option => { option.disabled = atLimit && !option.checked; });
+  dishOptions.forEach(({input, sideFieldset, cheeseInput}) => {
+    input.disabled = atLimit && !input.checked;
+    if (sideFieldset) {
+      sideFieldset.hidden = !input.checked;
+      sideFieldset.disabled = !input.checked;
+    }
+    if (cheeseInput) {
+      cheeseInput.parentElement.hidden = !input.checked;
+      cheeseInput.disabled = !input.checked;
+    }
+  });
   dishCount.textContent = `${selection.length} de ${maxDishes} platos elegidos${atLimit ? " · Límite alcanzado" : ""}`;
   if (selection.length) dishError.hidden = true;
   totalLabel.textContent = hasSalmon ? "Importe base" : "Monto final";
@@ -122,19 +176,23 @@ orderForm.addEventListener("submit", event => {
   const selection = selectedDishes();
   if (!selection.length) {
     dishError.hidden = false;
-    dishOptions[0].focus();
+    dishOptions[0].input.focus();
     return;
   }
   const combo = orderForm.elements.combo.value;
   const shipping = deliveryCost();
   const price = formatPrice(comboPrices[combo] + shipping);
-  const hasSalmon = selection.some(option => option.dataset.surcharge);
+  const hasSalmon = selection.some(option => option.hasSurcharge);
   const message = [
     "¡Hola, BalanceBox! Quiero hacer un pedido.",
     "",
     `Combo de ${combo} porciones`,
     "Platos elegidos:",
-    ...selection.map(option => `• ${option.value}`),
+    ...selection.map(({input, sideFieldset, sideName, cheeseInput}) => {
+      const side = sideFieldset ? orderForm.elements[sideName].value : "";
+      const cheese = cheeseInput ? ` · ${cheeseInput.checked ? "con" : "sin"} queso Port Salut` : "";
+      return `• ${input.value}${side ? ` (acompañamiento: ${side})` : ""}${cheese}`;
+    }),
     "",
     shipping ? `Entrega: envío a CABA (${formatPrice(shipping)})` : "Entrega: retiro",
     "Pago por adelantado.",

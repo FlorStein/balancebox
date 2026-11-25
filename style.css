@@ -64,6 +64,9 @@ h1{font-size:clamp(3rem,13vw,5.9rem)}
 
 .order{margin-top:2rem;border:1px solid #b8193060;border-radius:14px;background:#fff9ec;padding:clamp(1rem,4vw,2rem)}
 .order h3{font:900 clamp(1.5rem,4vw,2.3rem)/1 var(--display);letter-spacing:-.045em;color:var(--red);margin:0 0 1.4rem}
+.order-contact{margin:0 0 1.4rem}
+.order-contact a{display:inline-block;border:1px solid var(--blue);border-radius:2rem;padding:.58rem .85rem;color:var(--blue);font-weight:700;text-decoration:none}
+.order-contact a:hover{background:var(--blue);color:white}
 .order-terms{margin:0 0 1.4rem;padding-left:1.15rem;color:var(--blue)}
 .order-terms li+li{margin-top:.25rem}
 .order fieldset{min-width:0;padding:0;border:0;margin:0 0 1.4rem}

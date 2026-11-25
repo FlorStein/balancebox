@@ -73,6 +73,11 @@ h1{font-size:clamp(3rem,13vw,5.9rem)}
 .order label:has(:checked){background:var(--paper);border-color:var(--red)}
 .order label:has(:disabled){opacity:.58;cursor:default}
 .order-dishes{align-items:start}
+.order-dish-row{display:flex;align-items:center;justify-content:space-between;gap:.5rem;border:1px solid #b8193050;border-radius:.65rem;padding:.4rem .55rem}
+.quantity-controls{display:flex;flex-shrink:0;align-items:center;gap:.35rem;color:var(--red)}
+.quantity-controls span{min-width:2ch;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.quantity-controls button{display:grid;place-items:center;width:2.25rem;height:2.25rem;padding:0;border:1px solid var(--red);border-radius:50%;background:var(--paper);color:var(--red);font:700 1.25rem/1 Arial,sans-serif;cursor:pointer}
+.quantity-controls button:disabled{opacity:.45;cursor:default}
 .order .order-options{margin:.45rem 0 .35rem .65rem;padding-left:.65rem;border-left:1px solid #b8193050}
 .order-options legend{font:700 .9rem/1.3 Arial,sans-serif;color:var(--blue)}
 .order .order-sides{margin:.2rem 0 0}

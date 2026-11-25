@@ -108,14 +108,28 @@ const extrasByDish = new Map([
 const dishOptions = dishes.map(([category, name], index) => {
   const container = document.createElement("div");
   container.className = "order-dish";
-  const label = document.createElement("label");
-  const input = document.createElement("input");
-  input.type = "checkbox";
-  input.name = "dish";
-  input.value = name;
   const hasSurcharge = category === 3;
-  label.append(input, document.createTextNode(name + (hasSurcharge ? " (con adicional)" : "")));
-  container.append(label);
+  const row = document.createElement("div");
+  row.className = "order-dish-row";
+  const label = document.createElement("span");
+  label.id = `order-dish-${index}`;
+  label.textContent = name + (hasSurcharge ? " (con adicional)" : "");
+  const controls = document.createElement("div");
+  controls.className = "quantity-controls";
+  controls.setAttribute("role", "group");
+  controls.setAttribute("aria-labelledby", label.id);
+  const decrease = document.createElement("button");
+  const increase = document.createElement("button");
+  const quantity = document.createElement("span");
+  quantity.textContent = "0";
+  for (const [button, symbol, action] of [[decrease, "−", "Quitar"], [increase, "+", "Sumar"]]) {
+    button.type = "button";
+    button.textContent = symbol;
+    button.setAttribute("aria-label", `${action} una porción de ${name}`);
+  }
+  controls.append(decrease, quantity, increase);
+  row.append(label, controls);
+  container.append(row);
   orderDishes.append(container);
 
   const sides = sidesByDish.get(name);
@@ -163,11 +177,24 @@ const dishOptions = dishes.map(([category, name], index) => {
     return extraInput;
   });
   if (choices.length || extras.length) container.append(options);
-  return {input, hasSurcharge, options, choiceGroups, extraInputs};
+  const dish = {name, count: 0, decrease, increase, quantity, hasSurcharge, options, choiceGroups, extraInputs};
+  decrease.addEventListener("click", () => {
+    dish.count -= 1;
+    updateOrder();
+  });
+  increase.addEventListener("click", () => {
+    dish.count += 1;
+    updateOrder();
+  });
+  return dish;
 });
 
 function selectedDishes() {
-  return dishOptions.filter(({input}) => input.checked);
+  return dishOptions.filter(({count}) => count > 0);
+}
+
+function portionsSelected(selection) {
+  return selection.reduce((total, dish) => total + dish.count, 0);
 }
 
 function deliveryCost() {
@@ -179,12 +206,17 @@ function updateOrder() {
   const combo = orderForm.elements.combo.value;
   const hasSalmon = selection.some(option => option.hasSurcharge);
   const atLimit = selection.length >= maxDishes;
-  dishOptions.forEach(({input, options}) => {
-    input.disabled = atLimit && !input.checked;
-    options.disabled = !input.checked;
+  const portions = portionsSelected(selection);
+  dishOptions.forEach(({count, decrease, increase, quantity, options}) => {
+    decrease.disabled = count === 0;
+    increase.disabled = !combo || portions >= Number(combo) || (atLimit && count === 0);
+    quantity.textContent = String(count);
+    options.disabled = count === 0;
   });
-  dishCount.textContent = `${selection.length} de ${maxDishes} platos elegidos${atLimit ? " · Límite alcanzado" : ""}`;
-  if (selection.length) dishError.hidden = true;
+  dishCount.textContent = combo
+    ? `${portions} de ${combo} porciones · ${selection.length} de ${maxDishes} variedades`
+    : "Elegí un combo para sumar porciones.";
+  dishError.hidden = true;
   totalLabel.textContent = hasSalmon ? "Importe base" : "Monto final";
   const shipping = deliveryCost();
   orderAmount.textContent = combo ? formatPrice(comboPrices[combo] + shipping) : "Elegí un combo";
@@ -196,12 +228,15 @@ orderForm.addEventListener("change", updateOrder);
 orderForm.addEventListener("submit", event => {
   event.preventDefault();
   const selection = selectedDishes();
-  if (!selection.length) {
+  const combo = orderForm.elements.combo.value;
+  const remaining = Number(combo) - portionsSelected(selection);
+  if (remaining !== 0) {
+    const count = Math.abs(remaining);
+    dishError.textContent = `${remaining > 0 ? "Sumá" : "Quitá"} ${count} ${count === 1 ? "porción" : "porciones"} para completar el combo de ${combo}.`;
     dishError.hidden = false;
-    dishOptions[0].input.focus();
+    dishError.focus();
     return;
   }
-  const combo = orderForm.elements.combo.value;
   const shipping = deliveryCost();
   const price = formatPrice(comboPrices[combo] + shipping);
   const hasSalmon = selection.some(option => option.hasSurcharge);
@@ -210,12 +245,12 @@ orderForm.addEventListener("submit", event => {
     "",
     `Combo de ${combo} porciones`,
     "Platos elegidos:",
-    ...selection.map(({input, choiceGroups, extraInputs}) => {
+    ...selection.map(({name, count, choiceGroups, extraInputs}) => {
       const choices = choiceGroups.map(({title, fieldName}) =>
         ` · ${title.toLowerCase()}: ${orderForm.elements[fieldName].value}`
       ).join("");
       const extras = extraInputs.map(extra => ` · ${extra.checked ? "con" : "sin"} ${extra.value}`).join("");
-      return `• ${input.value}${choices}${extras}`;
+      return `• ${count} × ${name}${choices}${extras}`;
     }),
     "",
     shipping ? `Entrega: envío a CABA (${formatPrice(shipping)})` : "Entrega: retiro",
